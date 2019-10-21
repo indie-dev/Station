@@ -2,6 +2,7 @@ import sys
 import os
 import ssl
 import urllib.request as url
+from urllib.error import URLError
 import http.server
 import socketserver
 import threading
@@ -24,6 +25,10 @@ class ComputerListener:
         self.__context.check_hostname = False
         #Set verify mode to none
         self.__context.verify_mode = ssl.CERT_NONE
+        
+        self.__context.minimum_version = ssl.TLSVersion.TLSv1
+        self.__context.maximum_version = ssl.TLSVersion.TLSv1
+
         #Create an end of branch variable
         self.NETWORK_BRANCH_END = "END_OF_BRANCH"
         self.DEFAULT_HOST_PORT = 2087
@@ -33,45 +38,58 @@ class ComputerListener:
         self.MAIN_PAGE = "index.html"
 
     def get_all_computers_on_ip(self, ip, using_port=2087, max_count=2, add_to_computer_list=True, auto_save=True):
-        #Check if port being used is 80
-        if(using_port is 2087):
-            #Create the full url with no port
-            full_url = "https://" + str(ip) + ":2087/" + self.COMPUTER_LIST
-        else:
-            #Create the full url with the given port
-            full_url = "https://" + str(ip) + ":" + str(using_port) + "/" + self.COMPUTER_LIST
-        #Check if the current counter exceeds our max count
-        if(self.__current_count > max_count):
-            #End the function
-            return None
-        #Open the url
-        website = url.urlopen(full_url, context=self.__context)
-        #Read the content
-        content = str(website.read().decode("utf-8"))
-        #Check if the content is the end of network
-        if((content is self.NETWORK_BRANCH_END) or (content == self.NETWORK_BRANCH_END)):
-            #Return nothing, end function
-            return None
-        #Check if content starts with uri
-        if(content.startswith("https://")):
-            #Replace the uri
-            content = content.replace("https://", "")
-        elif(content.startswith("http://")):
-            #Replace the uri
-            content = content.replace("http://", "")
-        #Check if we should add the computer to our list
-        if((add_to_computer_list is True) or (add_to_computer_list == True)):
-            #Add the computer to our list
-            self.add_computer_to_list(content)
-        #Check if we should save the computer to our list
-        if((auto_save is True) or (auto_save == True)):
-            #Save the list to our file
-            self.save_computer_list()
-        #Update the counter
-        self.__current_count += 1
-        #Get all the computers on this computer
-        self.get_all_computers_on_ip(content, using_port=using_port)
+        try:
+            #Check if port being used is 80
+            if(using_port is 2087):
+                #Create the full url with no port
+                full_url = "http://" + str(ip) + ":2087/" + self.COMPUTER_LIST
+            else:
+                #Create the full url with the given port
+                full_url = "http://" + str(ip) + ":" + str(using_port) + "/" + self.COMPUTER_LIST
+            #Check if the current counter exceeds our max count
+            if(self.__current_count > max_count):
+                #End the function
+                return None
+            #Open the url
+            website = url.urlopen(full_url, context=self.__context)
 
+            #Read the content
+            content = str(website.read().decode("utf-8"))
+            #Check if the content is the end of network
+            if((content is self.NETWORK_BRANCH_END) or (content == self.NETWORK_BRANCH_END)):
+                #Return nothing, end function
+                return None
+            #Check if content starts with uri
+            if(content.startswith("https://") and ((content.endswith(",") is False))):
+                #Replace the uri
+                content = content.replace("https://", "")
+            elif(content.startswith("http://") and ((content.endswith(",") is False))):
+                #Replace the uri
+                content = content.replace("http://", "")
+            #Check if we should add the computer to our list
+            if((add_to_computer_list is True) or (add_to_computer_list == True)):
+                if(content.endswith(",") is False):
+                    #Add the computer to our list
+                    self.add_computer_to_list(content)
+            #Check if we should save the computer to our list
+            if((auto_save is True) or (auto_save == True)):
+                #Save the list to our file
+                self.save_computer_list()
+            #Update the counter
+            self.__current_count += 1
+            if(content.endswith(",") or "," in content):
+                #Split the lines
+                lines = content.split(",")
+                #Loop through the computers list
+                for _ip in lines:
+                    _ip = _ip.replace("\n", "")
+                    #Get all the computers on this computer
+                    self.get_all_computers_on_ip("http://" + _ip, using_port=using_port)
+            else:
+                #Get all the computers on this computer
+                self.get_all_computers_on_ip("http://" + content, using_port=using_port)
+        except URLError as error:
+            print("There was an error in parsing %s"%(ip))
     def add_computer_to_list(self, ip):
         #Add the computer to our list
         self.__computer_list.append(ip)
