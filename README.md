@@ -17,3 +17,5 @@ Station is an open source, peer-to-peer based Docker alternative. Station allows
 7. Forcing hosters to use Linux for a permanent move to support linux-only terminal request types. This is because I plan on having the application download a light form of linux and inject that into the payload before launching the payload into the network. This is only for payloads that request terminal access.
 
 As for webhosting, requiring that the user has either xampp or php installed does sound very promising.
+
+If there are any issues or you wish to contribute to this, feel free to email me at azweekly99@gmail.com
