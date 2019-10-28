@@ -1,38 +1,35 @@
-from computer_listener import *
-from container import *
-
+import sys, os
+import xml.etree.ElementTree as Tree
+from storage import *
 class Station:
-    MODE_DOCK_AND_SHARE = 0
-    MODE_UNDOCK_AND_NOTIFY = 1
-    MODE = 0
-    def __init__(self, mode):
-        if((mode is Station.MODE_DOCK_AND_SHARE) or (mode == Station.MODE_DOCK_AND_SHARE)):
-            #Pack the container, then give it to the network
-            self.__pack_and_share_to_network = True
-            self.__unpack_and_notify_network = False
-            self.MODE = Station.MODE_DOCK_AND_SHARE
-        elif((mode is Station.MODE_UNDOCK_AND_NOTIFY) or (mode == Station.MODE_UNDOCK_AND_NOTIFY)):
-            #Unpack the container, and tell the network you have it
-            self.__unpack_and_notify_network = True
-            self.__pack_and_share_to_network = False
-            self.MODE = Station.MODE_UNDOCK_AND_NOTIFY
-        self.__listener = ComputerListener()
-        self.__container = Container()
-    #Check if the requested mode is 0
-    if((MODE is MODE_DOCK_AND_SHARE)):
-        #If so, allow usage of dock_and_share function
-        def dock_and_share(self, path, container_name):
-            self.__container.pack_into_container(path, container_name)
-    else:
-        #If not, allow usage of undock_and_notify function
-        def undock_and_notify(self, path):
-            self.__container.unpack_container(path)
-    def listen_for_other_stations(self, neighbor_station):
-        #Listen for all stations on the network
-        self.__listener.get_all_computers_on_ip(neighbor_station, max_count=5)
+    SETUP_AS_STATION = "STATION"
+    SETUP_AS_SHIP = "SHIP"
+    SETUP_AS_BOTH = "BOTH"
+    SUPPORTS_TYPE_WEBHOST = "WEBHOST"
+    SUPPORTS_TYPE_FILE_SHARE = "FILE_SHARE"
+    SUPPORTS_TYPE_TERMINAL = "TERMINAL"
+    SUPPORTS_TYPE_ALL = "ALL"
+    SELECTED_SETUP_TYPE = "BOTH"
+    SELECTED_SUPPORT_TYPE = "ALL"
+    def __init__(self, setup_as="BOTH", payload_list_path = "payload_list.xml", known_stations_list_path = "known_stations.xml", supports_type="ALL"):
+        Station.SELECTED_SETUP_TYPE = setup_as
+        Station.SELECTED_SUPPORT_TYPE = supports_type
+        self.__setup_as = setup_as
+        self.__supports_type = supports_type
+        self.save_application()
     
-    def get_listener(self):
-        return self.__listener
-    
-    def get_container(self):
-        return self.__container
+    def save_application(self, payload_list_path ="payload_list.xml", known_stations_list_path = "known_stations.xml", save_path="info.xml"):
+        #Ship for collecting, station for hosting
+        __storage = Storage("info.xml", root_tag="Stations")
+        #Get the stored station type
+        stored_station_type = __storage.get_attribute_value("Info", "station_type")
+        #Get the stored request types that the station supports
+        stored_requests_supported = __storage.get_attribute_value("Info", "station_request_types_supported")
+        #Check if the stored station type is nothing, and so is the stored requests type
+        if(stored_station_type is not True and stored_requests_supported is not True):
+            #Save the data
+            __storage.write_node("Info", attribute_keys=["station_type"], attribute_values=[self.__setup_as])
+            __storage.write_node("Info", attribute_keys=["station_request_types_supported"], attribute_values=[self.__supports_type])
+            __storage.write_node("Info", attribute_keys=["payload_list_path"], attribute_values=[payload_list_path])
+            __storage.write_node("Info", attribute_keys=["known_stations_list_path"], attribute_values=[known_stations_list_path])
+        

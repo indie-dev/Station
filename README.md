@@ -1,19 +1,19 @@
-# Station
-Station is a peer-to-peer docker-like program that allows you to store files and execute programs (code, binary files, etc) on another user's computer, allowing 
-for you to potentially reduce server costs for web hosting. The future for this program involves sandboxing unpacked containers so that no hacker or person with 
-malicious intent can execute viruses or malware on your machine.
+# What is Station?
+Station is an open source, peer-to-peer based Docker alternative. Station allows for you to not only share your payload, but to gain terminal access to the files inside of the payload on someone else's machine, provided they setup Station to allow you to do so.
 
-Currently, station can do these few things:
-1. Find computers associated with a neighbor computer
-2. Host a list of computers your machine knows
-3. Host a list of containers that your machine has
+# What can station currently do?
+1. Given a neighbor station, station can find all stations that station knows. It then iterates through all of the stations that new station knows, all until it runs into an END_OF_BRANCH, or the last station on that branch.
 
-What I hope in the future is to centralize some bits of information for creating custom alpha-numeric identifiers for containers, allowing multiple containers 
-to have the same name.
+2. Station can currently package your payload, but not ship it off just yet. I am still working on the entire network, so come back in a few months or years.
 
-# Instructions?
-Currently, its best to run the test.py file as this project is new and has no instructions manual.
-I also suggest allowing port forwarding for port 2087 and 8080 on your router, linking them back to
-your static ip address. 2087 is the port used for hosting information such as the index.html page generated
-when you run the function unpack_container, residing in the Container class. Port 8080 is what is used
-for web hosting, in case that the container you have is actually a website.
+
+# What does Station hope to do?
+1. Decrease server costs for web developers
+2. De-centralize file sharing / file hosting
+3. Use unique identifiers for downloading payloads instead of going off of the name
+4. Use checksum verification methods for uploading modified versions of the payload
+5. Use a custom compression library for payloads, hopefully reducing space used per payload by 30%
+6. Password encrypting uploaded payloads to prevent hosters from accessing a user's payload
+7. Forcing hosters to use Linux for a permanent move to support linux-only terminal request types. This is because I plan on having the application download a light form of linux and inject that into the payload before launching the payload into the network. This is only for payloads that request terminal access.
+
+As for webhosting, requiring that the user has either xampp or php installed does sound very promising.
