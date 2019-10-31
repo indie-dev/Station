@@ -1,33 +1,37 @@
 import sys
 import os
-import ssl
-import urllib
-import socketserver
-import zipfile
-import random
-import xml.etree.ElementTree as Tree
 from storage import *
-import bs4
 
 class Radar:
-    def __init__(self, station_list_path="known_stations.xml"):
-        self.__station_list_path = station_list_path
-        self.__station_list = Storage(self.__station_list_path, root_tag="Stations")
-
-    def listen_for_stations(self, neighbor_station):
-        if(neighbor_station is "END_OF_BRANCH" or ((neighbor_station) == "END_OF_BRANCH")):
-            print("FOUND END")
-            return None
-        __station_list_path = self.__station_list.get_attribute_from_site(neighbor_station + "/info.xml", "Info", "known_stations_list_path")[0]
-        __station_list = self.__station_list.get_attribute_from_site(neighbor_station + "/" + __station_list_path, "Station", "station_address")
-        for station in __station_list:
-            if("END_OF_BRANCH" not in (str(station))):
-                self.add_station_to_list(str(station))
-            self.listen_for_stations(station)
-
+    DEFAULT_STATION_PATH = "/Station/stations_list.xml"
+    def __init__(self, known_stations_list=None):
+        #Check if the known stations list is not null
+        if(known_stations_list is not None):
+            #Initiate our stations list with the known list
+            self.__stations_list = known_stations_list
+            #Check if the stations list file exists
+            if(os.path.exists(os.path.expanduser("~") + Radar.DEFAULT_STATION_PATH)):
+                #Open the file in our storage class
+                __storage = Storage(os.path.expanduser("~") + Radar.DEFAULT_STATION_PATH)
+                #Loop through all device tags
+                for __device in __storage.get_all_elements("Device"):
+                    #Get the device's location
+                    self.__stations_list.append(__device.get("location"))
+        else:
+            #Initiate our stations list with no data
+            self.__stations_list = list()
     
-    def add_station_to_list(self, station_address):
-        self.__station_list.write_node("Station", attribute_keys=["station_address"], attribute_values=[station_address])
-
-    def get_station_list(self):
-        return self.__station_list
+    def find_stations(self, neighbor_station):
+        pass
+    
+    def save_stations_list(self):
+        #Check if the parent directory exists
+        if(os.path.exists(os.path.expanduser("~") + "/Station") is False):
+            #Create the directory
+            os.makedirs(os.path.expanduser("~") + "/Station")
+        #Create a storage variable
+        __storage = Storage(os.path.expanduser("~") + Radar.DEFAULT_STATION_PATH)
+        #Loop through our stations list
+        for __station in self.__stations_list:
+            #Save the given station
+            __storage.add_element("Device", None, attribute_keys=["location"], attribute_values=[str(__station)])
