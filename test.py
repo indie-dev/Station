@@ -2,5 +2,5 @@ import sys
 import os
 from radar import *
 
-__radar = Radar(known_stations_list=["192.168.0.32"])
-__radar.save_stations_list()
+__radar = Radar()
+__radar.find_stations("192.168.0.40/Lena")

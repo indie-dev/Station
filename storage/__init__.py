@@ -31,12 +31,39 @@ class Storage:
                 __index = attribute_keys.index(__key)
                 #Get the value at the given index
                 __value = attribute_values[__index]
-                #Add the key value pair
-                __child.set(__key, __value)
+                #Check again if the file exists
+                if(os.path.exists(self.__path)):
+                    #Get all of the elements with the given tag
+                    __elements = self.get_all_elements(tag)
+                    print(str(__elements))
+                    #Loop through the elements list
+                    for __element in __elements:
+                        #Check if the value is the same
+                        if(__element.get(__key) is __value):
+                            print("EXISTS")
+                        else:
+                            __child.set(__key, __value)
+                else:
+                    #Add the key value pair
+                    __child.set(__key, __value)
         #Check if the value is not none
         if(value is not None):
-            #Set the value of our child element
-            __child.set("value", value)
+            #Check if the file eixsts
+            if(os.path.exists(self.__path)):
+                #Get all of the elements
+                __elements = self.get_all_elements(tag)
+                #Loop through the elements
+                for __element in __elements:
+                    #Check if the value exists
+                    if(__element.get("value") is value):
+                        #Pass
+                        pass
+                    else:
+                        #Set the value of our child element
+                        __child.set("value", value)
+            else:
+                #Set the value of our child element
+                __child.set("value", value)
         #Get the content as a string
         __content = Tree.tostring(self.__document)
         #Open the file and write the content
