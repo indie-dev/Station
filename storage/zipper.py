@@ -2,6 +2,7 @@ import sys
 import os
 from storage import *
 from pathlib import Path
+from utils.files import *
 class Zipper:
     def __init__(self, path, encrypt=False, decrypt=False, password=None):
         self.__path = path
@@ -19,31 +20,36 @@ class Zipper:
         else:
             for foldername, dirs, files in os.walk(folder_to_write):
                 for file in files:
-                    print(foldername + "/" + file)
-                    self.write(foldername + "/" + file)
+                    try:
+                        self.write(foldername + "/" + file)
+                    except UnicodeDecodeError as identifier:
+                        pass
     def write(self, file_to_write):
-        print("ADDING: %s"%(file_to_write))
-        #Open the requested file for writing
-        with open(file_to_write, "r") as read:
-            #Create an empty content variable
-            content = ""
-            #Loop through all of the lines in the file
-            for line in read.readlines():
-                #Append the content variable
-                __content = line
-                content += line
-            if(self.__encrypt):
-                content = self.encrypt(content)
-            #Get the parent path
-            #__parent_path = str(os.path.abspath(os.path.join(file_to_write, os.pardir)))
-            __parent_path = "."
-            #Check if our parent path is not in the file_to_write variable
-            if(__parent_path not in file_to_write):
-                #If so, set the parent path to .
+        try:
+            print("ADDING: %s"%(file_to_write))
+            #Open the requested file for writing
+            with open(file_to_write, "r") as read:
+                #Create an empty content variable
+                content = ""
+                #Loop through all of the lines in the file
+                for line in read.readlines():
+                    #Append the content variable
+                    __content = line
+                    content += line
+                if(self.__encrypt):
+                    content = self.encrypt(content)
+                #Get the parent path
+                #__parent_path = str(os.path.abspath(os.path.join(file_to_write, os.pardir)))
                 __parent_path = "."
-            #Add our file to the archive
-            self.__storage.add_element("File", content, attribute_keys=["path", "multiple_elements_exist"], attribute_values=[file_to_write, __parent_path, "true"])
-            self.__pack_count += 1
+                #Check if our parent path is not in the file_to_write variable
+                if(__parent_path not in file_to_write):
+                    #If so, set the parent path to .
+                    __parent_path = "."
+                #Add our file to the archive
+                self.__storage.add_element("File", content, attribute_keys=["path", "multiple_elements_exist"], attribute_values=[file_to_write, __parent_path, "true"])
+                self.__pack_count += 1
+        except UnicodeDecodeError as identifier:
+            pass
 
     def unpack(self, unpack_path):
         #First, check for encryption
