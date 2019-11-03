@@ -1,6 +1,9 @@
 import sys
 import os
 from radar import *
+from payload import *
+from storage.zipper import Zipper
 
-__radar = Radar()
-__radar.find_stations("192.168.0.40/Lena")
+__zipper = Zipper(os.getcwd() + "/Phillipines.pz", encrypt=True, decrypt=True, password="RAM")
+__zipper.write("test.py")
+__zipper.unpack("test")

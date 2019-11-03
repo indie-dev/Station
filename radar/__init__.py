@@ -3,6 +3,7 @@ import os
 from storage import *
 
 class Radar:
+    DEFAULT_STATION_LOAD_PATH = "/Station/"
     DEFAULT_STATION_PATH = "/Station/stations_list.xml"
     FINAL_STATION = "FINAL_STATION"
     def __init__(self, known_stations_list=None):
@@ -53,16 +54,23 @@ class Radar:
                 #Exit the loop
                 return None
             self.__index_count += 1
+            #Go through the stations in the given location
             self.find_stations(str(__location))
 
     
     def save_stations_list(self):
+        #Check if the file exists
         if(os.path.exists(os.path.expanduser("~") + Radar.DEFAULT_STATION_PATH)):
+            #Open the xml code
             __file = open(os.path.expanduser("~") + Radar.DEFAULT_STATION_PATH, "r")
+            #Read the lines into _xml
             __xml = __file.readlines()
+            #Flush the file
             __file.flush()
+            #Close the file
             __file.close()
         else:
+            #Set _xml to empty
             __xml = ""
         #Check if the parent directory exists
         if(os.path.exists(os.path.expanduser("~") + "/Station") is False):
@@ -72,6 +80,7 @@ class Radar:
         __storage = Storage(os.path.expanduser("~") + Radar.DEFAULT_STATION_PATH)
         #Loop through our stations list
         for __station in self.__stations_list:
+            #Check if the station is not in _xml
             if(__station not in __xml):
                 #Save the given station
                 __storage.add_element("Device", None, attribute_keys=["location"], attribute_values=[str(__station)])

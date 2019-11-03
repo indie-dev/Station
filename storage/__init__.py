@@ -4,7 +4,7 @@ import xml.etree.ElementTree as Tree
 import urllib.request as url
 
 class Storage:
-    def __init__(self, path, root_tag="Station"):
+    def __init__(self, path, root_tag="Station", xml_content=None):
         path = str(path)
         #Instantiate the path variable for class use
         self.__path = path
@@ -14,12 +14,18 @@ class Storage:
             __page = url.urlopen(path)
             #Create our document element using urllib
             self.__document = Tree.fromstring(__page.read().decode("utf-8"))
-        elif(os.path.exists(path)):
+        elif(os.path.exists(path) and xml_content is None):
             #Create our document by parsing our path and getting the root element
             self.__document = Tree.parse(self.__path).getroot()
         else:
-            #Create our document by initiating a root element
-            self.__document = Tree.Element(root_tag)
+            #Check if the xml content tag is not empty
+            if(xml_content is not None):
+                print(xml_content)
+                #If it is not, set our document to the content
+                self.__document = Tree.fromstring(xml_content)
+            else:
+                #Create our document by initiating a root element
+                self.__document = Tree.Element(root_tag)
     def add_element(self, tag, value, attribute_keys=None, attribute_values=None):
         #Create a child element
         __child = Tree.SubElement(self.__document, tag)
@@ -35,14 +41,19 @@ class Storage:
                 if(os.path.exists(self.__path)):
                     #Get all of the elements with the given tag
                     __elements = self.get_all_elements(tag)
-                    print(str(__elements))
                     #Loop through the elements list
                     for __element in __elements:
                         #Check if the value is the same
-                        if(__element.get(__key) is __value):
-                            print("EXISTS")
-                        else:
-                            __child.set(__key, __value)
+                        try:
+                            if(__element.get(__key) is __value and (__element.get("multiple_elements_exist").lower() is "false")):
+                                pass
+                            else:
+                                __child.set(__key, __value)
+                        except AttributeError as identifier:
+                            if(__element.get(__key) is __value):
+                                pass
+                            else:
+                                __child.set(__key, __value)
                 else:
                     #Add the key value pair
                     __child.set(__key, __value)
