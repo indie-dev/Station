@@ -3,24 +3,23 @@ import os
 from zipfile import * 
 from storage import *
 from radar import *
-from cryptography.fernet import Fernet
+from storage.zipper import Zipper
 
 class Payload:
-    def __init__(self, payload_path, payload_name):
+    def __init__(self, payload_path, payload_name, password):
         self.__payload_path = payload_path
         self.__payload_name = payload_name
-        if(os.path.exists(os.path.expanduser("~") + "/Station/Payloads") is False):
-            os.makedirs(os.path.expanduser("~") + "/Station/Payloads")
-    #Package the payload
-    def package(self, password):
-        __dir = os.path.abspath(self.__payload_path)
-        with ZipFile(os.path.expanduser("~") + "/Station/Payloads/" + self.__payload_name + ".pack", "w") as writer:
-            for root, dirs, files in os.walk(__dir):
-                pass
-    #Unpack the payload
+        if(os.path.exists(os.path.expanduser("~") + "/Station") is False):
+            os.mkdir(os.path.expanduser("~") + "/Station")
+        if(os.path.exists(os.path.expanduser("~") + "/Station/Payloads/") is False):
+            os.mkdir(os.path.expanduser("~") + "/Station/Payloads/")
+        if(os.path.exists(os.path.expanduser("~") + "/Station/Payloads/" + self.__payload_name)):
+            os.mkdir(os.path.expanduser("~") + "/Station/Payloads/" + self.__payload_name)
+        self.__zipper = Zipper(os.path.expanduser("~") + "/Station/Payloads/" + self.__payload_name + ".pack", encrypt=True, decrypt=True, password=password)
+    def package(self):
+        self.__zipper.write_folder(self.__payload_path)
     def unpack(self):
-        pass
-
+        self.__zipper.unpack(os.path.expanduser("~") + "/Station/Payloads/" + self.__payload_name)
 class UploadPayload:
     def __init__(self, package_path):
         self.__package_path = package_path

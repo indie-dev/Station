@@ -5,8 +5,6 @@ from pathlib import Path
 class Zipper:
     def __init__(self, path, encrypt=False, decrypt=False, password=None):
         self.__path = path
-        if(os.path.exists(self.__path)):
-            os.remove(self.__path)
         self.__storage = Storage(self.__path)
         self.__encrypt = encrypt
         self.__decrypt = decrypt
@@ -21,6 +19,7 @@ class Zipper:
         else:
             for foldername, dirs, files in os.walk(folder_to_write):
                 for file in files:
+                    print(foldername + "/" + file)
                     self.write(foldername + "/" + file)
     def write(self, file_to_write):
         print("ADDING: %s"%(file_to_write))
@@ -84,7 +83,7 @@ class Zipper:
                 #Create all of the directories and sub directories
                 os.makedirs(unpack_path + "/" + __element_parent)
             #Open the file for writing
-            with open(unpack_path + "/" + __element_parent + __paths[len(__paths) - 1], "w") as writer:
+            with open(unpack_path + "/" + __element_parent + "/" + __paths[len(__paths) - 1], "w") as writer:
                 #Write our element value
                 writer.writelines(__element_value)
     def encrypt(self, content):

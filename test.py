@@ -1,9 +1,10 @@
 import sys
+sys.dont_write_bytecode = True
 import os
 from radar import *
 from payload import *
 from storage.zipper import Zipper
 
-__zipper = Zipper(os.getcwd() + "/Phillipines.pz", encrypt=True, decrypt=True, password="RAM")
-__zipper.write("test.py")
-__zipper.unpack("test")
+_payload = Payload("storage", "Station", "Abcgold13!")
+_payload.package()
+_payload.unpack()
