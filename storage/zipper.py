@@ -3,6 +3,8 @@ import os
 from storage import *
 from pathlib import Path
 from utils.files import *
+from storage.chunk import Chunk
+import chunk
 class Zipper:
     def __init__(self, path, encrypt=False, decrypt=False, password=None):
         self.__path = path
@@ -14,17 +16,18 @@ class Zipper:
             self.__storage.add_element("Encrypted", self.encrypt(b"true"))
             pass
         self.__pack_count = 0
-    def write_folder(self, folder_to_write):
+        self.__chunk = Chunk()
+    def write_folder(self, folder_to_write, chunk_out_dir):
         if(len(os.listdir(folder_to_write)) <= 0):
             print("Cannot pack empty folders")
         else:
             for foldername, dirs, files in os.walk(folder_to_write):
                 for file in files:
                     try:
-                        self.write(foldername + "/" + file)
+                        self.write(foldername + "/" + file, chunk_out_dir)
                     except UnicodeDecodeError as identifier:
                         pass
-    def write(self, file_to_write):
+    def write(self, file_to_write, chunk_out_dir):
         try:
             print("ADDING: %s"%(file_to_write))
             #Open the requested file for writing
@@ -48,10 +51,15 @@ class Zipper:
                 #Add our file to the archive
                 self.__storage.add_element("File", content, attribute_keys=["path", "multiple_elements_exist"], attribute_values=[file_to_write, __parent_path, "true"])
                 self.__pack_count += 1
+                #Break the payload into chunks if possible
+                self.__chunk.break_payload(self.__path, out_dir=chunk_out_dir)
         except UnicodeDecodeError as identifier:
             pass
 
     def unpack(self, unpack_path):
+        if(".chunk" in self.__path):
+            #Will add chunk packing later
+            raise Exception("Chunked payloads cannot be unpacked. You must first pack the chunks together into a payload before unpacking!")
         #First, check for encryption
         if(self.__decrypt is True):
             #Check if the password is correct by decrypting the encrypted key
