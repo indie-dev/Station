@@ -17,18 +17,21 @@ class Zipper:
             pass
         self.__pack_count = 0
         self.__chunk = Chunk()
-    def write_folder(self, folder_to_write, chunk_out_dir):
+    def write_folder(self, folder_to_write, chunk_out_dir, ignore_list=list()):
         if(len(os.listdir(folder_to_write)) <= 0):
             print("Cannot pack empty folders")
         else:
             for foldername, dirs, files in os.walk(folder_to_write):
                 for file in files:
                     try:
-                        self.write(foldername + "/" + file, chunk_out_dir)
+                        self.write(foldername + "/" + file, chunk_out_dir, ignore_list=ignore_list)
                     except UnicodeDecodeError as identifier:
                         pass
-    def write(self, file_to_write, chunk_out_dir):
+    def write(self, file_to_write, chunk_out_dir, ignore_list=list()):
         try:
+            if(file_to_write in ignore_list):
+                print("IGNORING: %s"%(file_to_write))
+                return None
             print("ADDING: %s"%(file_to_write))
             #Open the requested file for writing
             with open(file_to_write, "r") as read:
