@@ -1,12 +1,10 @@
-import sys
-import os
-from radar import *
-from payload import *
-from storage.zipper import Zipper
-from utils.files import *
-from storage.chunk import *
-__chunk = Chunk()
-__list = ["Be_1", "Here_10", "Or_2", "Be_3", "Square_4"]
-__chunk.break_payload("test.py", out_dir="Test")
-__chunk.break_payload("test.py", out_dir="Test")
-__chunk.repair_chunked_payload("Test", "test.txt")
+from storage import *
+from compression import *
+
+__storage = Storage("init.xml")
+__content_list = __storage.get_element_value("Compressed")[0].split(",")
+__output = bytearray()
+for content in __content_list:
+    if(content is not ""):
+        __output.append(int(content))
+print(__output.decode())

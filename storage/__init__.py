@@ -1,119 +1,104 @@
 import sys
 import os
-import xml.etree.ElementTree as Tree
-import urllib.request as url
+from xml.etree import ElementTree as Tree
 
 class Storage:
-    def __init__(self, path, root_tag="Station", xml_content=None):
-        path = str(path)
-        #Instantiate the path variable for class use
-        self.__path = path
-        #Check if the path is a url
-        if(path.startswith("http")):
-            #Open the given website
-            __page = url.urlopen(path)
-            #Create our document element using urllib
-            self.__document = Tree.fromstring(__page.read().decode("utf-8"))
-        elif(os.path.exists(path) and xml_content is None):
-            #Create our document by parsing our path and getting the root element
+    def __init__(self, xml_path, auto_save=True):
+        #Update the auto save feature
+        self.__auto_save = auto_save
+        #Set the path
+        self.__path = xml_path
+        #Check if the path exists
+        if(os.path.exists(self.__path)):
+            #Create a document variable
+            #The value is the root of the parsed path
             self.__document = Tree.parse(self.__path).getroot()
         else:
-            #Check if the xml content tag is not empty
-            if(xml_content is not None):
-                print(xml_content)
-                #If it is not, set our document to the content
-                self.__document = Tree.fromstring(xml_content)
-            else:
-                #Create our document by initiating a root element
-                self.__document = Tree.Element(root_tag)
-    def add_element(self, tag, value, attribute_keys=None, attribute_values=None):
-        #Create a child element
-        __child = Tree.SubElement(self.__document, tag)
-        #Check if the attribute set is not null
-        if(attribute_keys is not None and attribute_values is not None):
-            #Loop through the attribute key set
+            #Create a new element with the tag "Document"
+            self.__document = Tree.Element("Document")
+    
+    def add_element(self, element_tag, value, attribute_keys=None, attribute_values=None):
+        #Check if the path exists
+        if(os.path.exists(self.__path)):
+            #Create a document variable
+            #The value is the root of the parsed path
+            self.__document = Tree.parse(self.__path).getroot()
+        else:
+            #Create a new element with the tag "Document"
+            self.__document = Tree.Element("Document")
+        #Create a new sub element
+        __element = Tree.SubElement(self.__document, element_tag)
+        #Check if the attribute keys are not none
+        if(attribute_keys is not None):
+            #Loop through the attribute keys
             for __key in attribute_keys:
-                #Get the index
-                __index = attribute_keys.index(__key)
-                #Get the value at the given index
-                __value = attribute_values[__index]
-                #Check again if the file exists
-                if(os.path.exists(self.__path)):
-                    #Get all of the elements with the given tag
-                    __elements = self.get_all_elements(tag)
-                    #Loop through the elements list
-                    for __element in __elements:
-                        #Check if the value is the same
-                        try:
-                            if(__element.get(__key) is __value and (__element.get("multiple_elements_exist").lower() is "false")):
-                                pass
-                            else:
-                                __child.set(__key, __value)
-                        except AttributeError as identifier:
-                            if(__element.get(__key) is __value):
-                                pass
-                            else:
-                                __child.set(__key, __value)
-                else:
-                    #Add the key value pair
-                    __child.set(__key, __value)
-        #Check if the value is not none
-        if(value is not None):
-            #Check if the file eixsts
-            if(os.path.exists(self.__path)):
-                #Get all of the elements
-                __elements = self.get_all_elements(tag)
-                #Loop through the elements
-                for __element in __elements:
-                    #Check if the value exists
-                    if(__element.get("value") is value):
-                        #Pass
-                        pass
-                    else:
-                        #Set the value of our child element
-                        __child.set("value", value)
-            else:
-                #Set the value of our child element
-                __child.set("value", value)
-        #Get the content as a string
-        __content = Tree.tostring(self.__document)
-        #Open the file and write the content
+                #Get the index of the key
+                __key_index = attribute_keys.index(__key)
+                #Get the value associated with that index
+                __value = attribute_values[__key_index]
+                #Update our element
+                __element.set(__key, __value)
+        #Update our element with the given value
+        __element.set("value", value)
+        #Check if auto save is enabled
+        if(self.__auto_save is True):
+            #Save the document
+            self.save()
+        #Return the element
+        return __element
+
+    def get_element(self, element_tag):
+        #Get the values
+        __elements = self.__document.findall(element_tag)
+        #Return the elements
+        return __elements
+
+    def get_element_value(self, element_tag):
+        #Get the values
+        __values = self.__document.findall(element_tag)
+        #Check if our values is a list
+        if("list" in str(type(__values))):
+            #Create a value list
+            __result = list()
+            #Loop through the list
+            for __value in __values:
+                #Update our result array
+                __result.append(__value.get("value"))
+            #Return the result
+            return __result
+        else:
+            #Return our value
+            return __values.get("value")
+
+    def get_element_attribute_value(self, element_tag, attribute_key):
+        #Get the values
+        __values = self.__document.findall(element_tag)
+        #Check if our values is a list
+        if("list" in str(type(__values))):
+            #Create a value list
+            __result = list()
+            #Loop through the list
+            for __value in __values:
+                #Update our result
+                __result.append(__value.get(attribute_key))
+            #Return the list
+            return __result
+        else:
+            #Return our value
+            return __values.get(attribute_key)
+
+    def get_document(self):
+        #Return the document
+        return self.__document
+
+    def save(self):
+        #Convert the document to bytes
+        __bytes = Tree.tostring(self.__document)
+        #Open the path for writing bytes
         __file = open(self.__path, "wb")
-        #Write the content
-        __file.write(__content)
+        #Write the bytes
+        __file.write(__bytes)
         #Flush the file
         __file.flush()
         #Close the file
         __file.close()
-
-    def get_value(self, tag):
-        #Find the element with the given tag
-        __element = self.__document.find(tag)
-        #Return the value of our element
-        return __element.get("value")
-    
-    def get_attribute(self, tag, attribute_key):
-        #Find the element with the given tag
-        __element = self.__document.find(tag)
-        #Return the value of our element
-        return __element.get(attribute_key)
-    
-    def get_all_elements(self, tag):
-        #Return all of our elements with the given tag
-        return self.__document.findall(tag)
-
-    def get_all_attribute_values(self, tag, attribute_key):
-        #Find all of the elements
-        __elements = self.__document.findall(tag)
-        #Create a list variable for the elements + attribute values
-        __element_attribute_pairs = list()
-        #Loop through all of the elements
-        for __element in __elements:
-            #Check if our attribute exists in the element
-            if(__element.get(attribute_key)):
-                #Add the element to our element attribute pair
-                __element_attribute_pairs.append(__element)
-                #Add the attribute's value to our list
-                __element_attribute_pairs.append(__element.get(attribute_key))
-        #Return the attribute pairs
-        return __element_attribute_pairs
