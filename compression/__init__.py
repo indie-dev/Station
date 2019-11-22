@@ -15,13 +15,13 @@ class Compressor:
             #If that is true, create a storage variable
             self.__storage = Storage(path)
     
-    def chunk(self, output_dir):
-        self.__chunk.chunk_archive(self.__path, output_dir)
+    def chunk(self, path, output_dir):
+        self.__chunk.chunk_archive(path, output_dir)
 
     def restore_chunks(self, chunk_dir, restored_archive_path):
         self.__chunk.restore_chunk(chunk_dir, restored_archive_path)
 
-    def compress_file(self, file_path, parent_path):
+    def add_file(self, file_path, parent_path, delete_post_compression=True):
         #Open the given file for byte reading
         __file = open(file_path, "rb")
         #Read the lines
@@ -37,21 +37,32 @@ class Compressor:
         __file.flush()
         #Close the file
         __file.close()
+        #Check if the parent dir is empty
+        if(parent_path is ""):
+            #Set the parent path to .
+            parent_path = "."
         #Save the content
-        return self.__storage.add_element("Compressed", __content, attribute_keys=["file_name", "parent_dir"], attribute_values=[os.path.basename(file_path), parent_path])
-    
-    def compress_folder(self, folder_path, chunk_archive=False):
+        __element = self.__storage.add_element("Compressed", __content, attribute_keys=["file_name", "parent_dir"], attribute_values=[os.path.basename(file_path), parent_path])
+        #Check if we should delete after compressing to save storage
+        if(delete_post_compression):
+            #Delete the file
+            os.remove(file_path)
+    def add_folder(self, folder_path, delete_post_compression=True):
         #Loop through the files
         for root, folders, files in os.walk(folder_path):
             #Loop through the files and compress
             for file in files:
                 #Compression time!
-                self.compress_file(root + "/" + file, root)
+                self.add_file(root + "/" + file, root, delete_post_compression=delete_post_compression)
             #Loop through the folders
             for folder in folders:
                 #Compress the folders
-                self.compress_folder(root + "/" + folder)
-    def compress(self, path):
+                self.add_folder(root + "/" + folder, delete_post_compression=delete_post_compression)
+                #Check if we should delete after compressing
+                if(delete_post_compression):
+                    #Remove the folder
+                    os.rmdir(folder_path)
+    def add(self, path, delete_post_compression=True):
         if(os.path.isfile(path)):
             #Check if the os is windows
             if(os.name is "nt"):
@@ -63,10 +74,10 @@ class Compressor:
             #Get the parent dir
             __path = os.path.basename(os.path.dirname(path))
             #Compress the file
-            self.compress_file(path, __path)
+            self.add_file(path, __path, delete_post_compression=delete_post_compression)
         else:
             #Compress the folder
-            self.compress_folder(path)
+            self.add_folder(path, delete_post_compression=delete_post_compression)
     
     def decompress(self):
         #First, check if the path is a folder
