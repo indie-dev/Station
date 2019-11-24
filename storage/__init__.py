@@ -16,6 +16,10 @@ class Storage:
         else:
             #Create a new element with the tag "Document"
             self.__document = Tree.Element("Document")
+            #Check if its parent directory exists
+            if(os.path.exists(self.__path.replace(os.path.basename(self.__path), "")) is False or os.path.isdir(self.__path.replace(os.path.basename(self.__path), "")) is False):
+                #If not, make it
+                os.mkdir(self.__path.replace(os.path.basename(self.__path), ""))
     
     def add_element(self, element_tag, value, attribute_keys=None, attribute_values=None):
         #Check if the path exists
@@ -102,3 +106,41 @@ class Storage:
         __file.flush()
         #Close the file
         __file.close()
+
+
+class Settings(Storage):
+    def add_int(self, key, value):
+        #Add the element
+        return super().add_element("Integer", str(value), attribute_keys=["key"], attribute_values=[key])
+        
+    def add_float(self, key, value):
+        #Add the element
+        return super().add_element("Float", str(value), attribute_keys=["key"], attribute_values=[key])
+        
+    def add_string(self, key, value):
+        #Add the element
+        return super().add_element("String", value, attribute_keys=["key"], attribute_values=[key])
+        
+    def add_setting(self, setting_type, key, value):
+        #Add the element
+        return super().add_element(setting_type, value, attribute_keys=["key"], attribute_values=[key])
+    
+    def get_int(self, key):
+        for element in super().get_element("Integer"):
+            if(element.get("key") == key):
+                return int(element.get("value"))
+                
+    def get_float(self, key):
+        for element in super().get_element("Float"):
+            if(element.get("key") == key):
+                return float(element.get("value"))
+                
+    def get_string(self, key):
+        for element in super().get_element("String"):
+            if(element.get("key") == key):
+                return element.get("value")
+                
+    def get_setting(self, key):
+        for element in super().get_element("Setting"):
+            if(element.get("key") == key):
+                return element.get("value")
