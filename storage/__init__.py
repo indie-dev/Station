@@ -1,6 +1,7 @@
 import sys
 import os
 from xml.etree import ElementTree as Tree
+import urllib.request
 
 class Storage:
     def __init__(self, xml_path, auto_save=True):
@@ -13,6 +14,21 @@ class Storage:
             #Create a document variable
             #The value is the root of the parsed path
             self.__document = Tree.parse(self.__path).getroot()
+        elif(self.__path.startswith("web://") or self.__path.startswith("http://")):
+            #Replace web:// with http://
+            self.__path = self.__path.replace("web://", "http://")
+            #Open the url
+            __url = urllib.request.urlopen(self.__path)
+            #Read the lines as a list
+            __lines = __url.readlines()
+            #Create an empty results variable
+            __results = ""
+            #Loop through the given lines
+            for __line in __lines:
+                #Append the results with the decoded line
+                __results += __line.decode()
+            #Create a new document with the given lines
+            self.__document = Tree.fromstring(__results)
         else:
             #Create a new element with the tag "Document"
             self.__document = Tree.Element("Document")

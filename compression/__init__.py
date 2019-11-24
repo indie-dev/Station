@@ -31,6 +31,8 @@ class Compressor:
         #Loop through the bits in the lines
         for byte in __lines:
             for bit in byte:
+                if(type(bit) == type(str())):
+                    bit = ord(bit)
                 #Update the content
                 __content += str(bit) + ","
         #Flush the file
